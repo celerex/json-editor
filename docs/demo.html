@@ -4,14 +4,25 @@
 		<meta charset="utf-8"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1"/>
 		<title>JSON Editor Demo</title>
-		<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/celerex/json-editor@master/dist/editor.css"/>
+		<link
+			rel="stylesheet"
+			href="https://cdn.jsdelivr.net/gh/celerex/json-editor@master/dist/editor.css"/>
+		<link
+			rel="stylesheet"
+			href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.min.css"/>
+		<script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/javascript/javascript.min.js"></script>
 	</head>
 	<body>
 		<h1>Visual JSON Editor Demo</h1>
 		<section class="panel" id="editor"></section>
 		<section class="panel">
 			<h2>Current JSON</h2>
-			<pre id="output"></pre>
+			<div id="output-editor" class="code-editor"></div>
+			<div id="output-error" class="je-error"></div>
+			<div class="code-actions">
+				<button id="apply-json" type="button">Apply JSON</button>
+			</div>
 		</section>
 		<section class="panel" id="editor-freeform"></section>
 		<section class="panel">
@@ -33,6 +44,36 @@
 			<h2>Array (Objects)</h2>
 			<pre id="output-array-objects"></pre>
 		</section>
+		<style>
+			.code-editor {
+				height: 260px;
+				border: 1px solid var(--je-panel-border);
+				border-radius: 8px;
+				overflow: hidden;
+				background: var(--je-panel-bg);
+			}
+
+			.code-editor .CodeMirror {
+				height: 100%;
+				font-family: "IBM Plex Mono", "SFMono-Regular", Menlo, monospace;
+				font-size: 12px;
+				line-height: 1.5;
+				background: var(--je-panel-bg);
+				color: var(--je-text-primary);
+			}
+
+			.code-editor .CodeMirror-gutters {
+				background: var(--je-panel-bg);
+				border-right: 0;
+				color: var(--je-text-muted);
+			}
+
+			.code-actions {
+				margin-top: 10px;
+				display: flex;
+				gap: 8px;
+			}
+		</style>
 		<script type="module">
 			import { createDomEditor } from "https://cdn.jsdelivr.net/gh/celerex/json-editor@master/dist/editor.esm.js";
 			const schema = {
@@ -112,7 +153,9 @@
 				},
 				additionalProperties: false
 			}
-			const output = document.querySelector("#output")
+			const outputEditorEl = document.querySelector("#output-editor")
+			const outputError = document.querySelector("#output-error")
+			const applyJsonBtn = document.querySelector("#apply-json")
 			const outputFreeform = document.querySelector("#output-freeform")
 			const outputScalar = document.querySelector("#output-scalar")
 			const outputArrayScalars = document.querySelector("#output-array-scalars")
@@ -143,6 +186,36 @@
 				error: "",
 				toggle: ""
 			}
+			const outputEditor = window.CodeMirror(
+				outputEditorEl,
+				{
+					value: JSON.stringify(initialValue, null, 2),
+					mode: { name: "javascript", json: true },
+					lineNumbers: true,
+					lineWrapping: true,
+					indentUnit: 2,
+					tabSize: 2
+				}
+			)
+			const setOutputJson = (text) => {
+				const current = outputEditor.getValue()
+				if (current === text) return
+				outputEditor.setValue(text)
+			}
+			applyJsonBtn.addEventListener(
+				"click",
+				() => {
+					const raw = outputEditor.getValue()
+					try {
+						const parsed = raw.trim() === "" ? null : JSON.parse(raw)
+						outputError.textContent = ""
+						editor.setValue(parsed)
+					}
+					catch (error) {
+						outputError.textContent = error instanceof Error ? error.message : "Invalid JSON"
+					}
+				}
+			)
 			const editor = createDomEditor(
 				{
 					container: document.querySelector("#editor"),
@@ -150,7 +223,7 @@
 					schema,
 					lenient: false,
 					onChange(next) {
-						output.textContent = JSON.stringify(next, null, 2)
+						setOutputJson(JSON.stringify(next, null, 2))
 						window.localStorage.setItem("json-editor-demo", JSON.stringify(next))
 					},
 					classes,
@@ -243,7 +316,7 @@
 					defaultCollapsed: true
 				}
 			)
-			output.textContent = JSON.stringify(editor.value, null, 2)
+			setOutputJson(JSON.stringify(editor.value, null, 2))
 			outputFreeform.textContent = JSON.stringify(freeformEditor.value, null, 2)
 			outputScalar.textContent = JSON.stringify(scalarEditor.value, null, 2)
 			outputArrayScalars.textContent = JSON.stringify(arrayScalarEditor.value, null, 2)

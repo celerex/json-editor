@@ -115,12 +115,19 @@ pre {
 	border-radius: var(--je-input-radius);
 	border: 1px solid var(--je-input-border);
 	background: var(--je-input-bg);
+	box-sizing: border-box;
+	max-width: 100%;
 }
 
 textarea.je-input {
 	min-height: 90px;
 	resize: vertical;
 	line-height: 1.4;
+}
+
+.je-key-input {
+	max-width: 100%;
+	width: 100%;
 }
 
 .je-input[type="checkbox"] {
@@ -152,6 +159,11 @@ button:disabled {
 .je-key {
 	font-weight: 500;
 	color: #3e362e;
+}
+
+.je-value {
+	min-width: 10px;
+	width: 100%;
 }
 
 .je-icon-btn {
@@ -301,5 +313,27 @@ button:disabled {
 @media (max-width: 900px) {
 	body {
 		grid-template-columns: 1fr;
+	}
+	.je-row, .je-array-row {
+		grid-template-columns: max-content 1fr;
+	}
+	.je-key {
+		margin: 0;
+	}
+	.je-row-icons {
+		margin-bottom: 0;
+		margin-right: 6px;
+		grid-column: 1;
+		align-self: center;
+	}
+	.je-key {
+		grid-column: 2;
+		align-self: center;
+	}
+	.je-value {
+		grid-column: 1 / -1;
+	}
+	.je-array-row .je-value {
+		grid-column: 2;
 	}
 }
