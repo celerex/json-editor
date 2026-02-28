@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1"/>
+		<title>JSON Editor Demo</title>
+		<link rel="stylesheet" href="./src/editor.css"/>
+	</head>
+	<body>
+		<h1>Visual JSON Editor Demo</h1>
+		<section class="panel" id="editor"></section>
+		<section class="panel">
+			<h2>Current JSON</h2>
+			<pre id="output"></pre>
+		</section>
+		<section class="panel" id="editor-freeform"></section>
+		<section class="panel">
+			<h2>Freeform JSON</h2>
+			<pre id="output-freeform"></pre>
+		</section>
+		<section class="panel" id="editor-scalar"></section>
+		<section class="panel">
+			<h2>Scalar JSON</h2>
+			<pre id="output-scalar"></pre>
+		</section>
+		<section class="panel" id="editor-array-scalars"></section>
+		<section class="panel">
+			<h2>Array (Scalars)</h2>
+			<pre id="output-array-scalars"></pre>
+		</section>
+		<section class="panel" id="editor-array-objects"></section>
+		<section class="panel">
+			<h2>Array (Objects)</h2>
+			<pre id="output-array-objects"></pre>
+		</section>
+		<script type="module">
+			import { createDomEditor } from "./src/editor.js";
+			const schema = {
+				title: "Profile",
+				description: "Structured profile data with nested settings.",
+				type: "object",
+				required: ["name", "status"],
+				properties: {
+					name: { type: "string", title: "Name", description: "Display name shown in the product UI." },
+					status: {
+						enum: ["active", "paused", "archived"],
+						title: "Status",
+						description: "Controls availability and visibility."
+					},
+					age: {
+						type: "number",
+						minimum: 0,
+						title: "Age",
+						description: "Minimum 0, used for eligibility."
+					},
+					birthday: {
+						type: "string",
+						format: "date",
+						title: "Birthday",
+						description: "Use YYYY-MM-DD."
+					},
+					newsletter: { type: "boolean", title: "Newsletter", description: "Receive product updates by email." },
+					contact: {
+						title: "Contact",
+						description: "Primary contact details.",
+						type: "object",
+						required: ["email"],
+						properties: {
+							email: {
+								type: "string",
+								format: "email",
+								title: "Email",
+								description: "Main inbox for notifications."
+							},
+							phone: { type: "string", title: "Phone", description: "Optional support number." },
+							contactTime: {
+								type: "string",
+								format: "time",
+								title: "Best Time",
+								description: "Local time, HH:MM."
+							}
+						},
+						additionalProperties: false
+					},
+					tags: {
+						title: "Tags",
+						description: "Free-form labels for search and grouping.",
+						type: "array",
+						items: { type: "string" }
+					},
+					notes: {
+						title: "Notes",
+						description: "Either a short string or a structured note.",
+						oneOf: [{ type: "string", title: "Plain", description: "Single line note." }, {
+							type: "object",
+							title: "Structured",
+							description: "Expandable note object.",
+							properties: { summary: { type: "string", description: "Short summary." } }
+						}],
+						"ui:widget": "textarea"
+					},
+					preferences: {
+						title: "Preferences",
+						description: "Display and layout choices.",
+						type: "object",
+						properties: {
+							theme: { const: "light", title: "Theme", description: "Locked to light for now." },
+							layout: { enum: ["dense", "cozy", "spacious"], title: "Layout", description: "UI spacing preset." }
+						},
+						additionalProperties: { type: "string" }
+					}
+				},
+				additionalProperties: false
+			}
+			const output = document.querySelector("#output")
+			const outputFreeform = document.querySelector("#output-freeform")
+			const outputScalar = document.querySelector("#output-scalar")
+			const outputArrayScalars = document.querySelector("#output-array-scalars")
+			const outputArrayObjects = document.querySelector("#output-array-objects")
+			const saved = window.localStorage.getItem("json-editor-demo")
+			const initialValue = saved ? JSON.parse(saved) : {}
+			const classes = {
+				field: "",
+				object: "",
+				array: "",
+				row: "",
+				arrayRow: "",
+				label: "",
+				docIcon: "",
+				input: "",
+				remove: "",
+				move: "",
+				header: "",
+				title: "",
+				badge: "",
+				description: "",
+				body: "",
+				addRow: "",
+				addButton: "",
+				key: "",
+				value: "",
+				warning: "",
+				error: "",
+				toggle: ""
+			}
+			const editor = createDomEditor(
+				{
+					container: document.querySelector("#editor"),
+					value: initialValue,
+					schema,
+					lenient: false,
+					onChange(next) {
+						output.textContent = JSON.stringify(next, null, 2)
+						window.localStorage.setItem("json-editor-demo", JSON.stringify(next))
+					},
+					classes,
+					defaultCollapsed: true
+				}
+			)
+			const freeformSaved = window.localStorage.getItem("json-editor-demo-freeform")
+			const freeformInitial = freeformSaved ? JSON.parse(freeformSaved) : {}
+			const freeformEditor = createDomEditor(
+				{
+					container: document.querySelector("#editor-freeform"),
+					value: freeformInitial,
+					schema: null,
+					lenient: true,
+					onChange(next) {
+						outputFreeform.textContent = JSON.stringify(next, null, 2)
+						window.localStorage.setItem("json-editor-demo-freeform", JSON.stringify(next))
+					},
+					classes,
+					defaultCollapsed: false
+				}
+			)
+			const scalarSchema = { title: "API Key", type: "string", description: "Paste a token or key for authenticated requests." }
+			const scalarSaved = window.localStorage.getItem("json-editor-demo-scalar")
+			const scalarInitial = scalarSaved ? JSON.parse(scalarSaved) : ""
+			const scalarEditor = createDomEditor(
+				{
+					container: document.querySelector("#editor-scalar"),
+					value: scalarInitial,
+					schema: scalarSchema,
+					lenient: false,
+					onChange(next) {
+						outputScalar.textContent = JSON.stringify(next, null, 2)
+						window.localStorage.setItem("json-editor-demo-scalar", JSON.stringify(next))
+					},
+					classes,
+					defaultCollapsed: false
+				}
+			)
+			const arrayScalarSchema = {
+				title: "Tags",
+				description: "Root array of scalar strings.",
+				type: "array",
+				items: { type: "string" }
+			}
+			const arrayScalarSaved = window.localStorage.getItem("json-editor-demo-array-scalars")
+			const arrayScalarInitial = arrayScalarSaved ? JSON.parse(arrayScalarSaved) : []
+			const arrayScalarEditor = createDomEditor(
+				{
+					container: document.querySelector("#editor-array-scalars"),
+					value: arrayScalarInitial,
+					schema: arrayScalarSchema,
+					lenient: false,
+					onChange(next) {
+						outputArrayScalars.textContent = JSON.stringify(next, null, 2)
+						window.localStorage.setItem("json-editor-demo-array-scalars", JSON.stringify(next))
+					},
+					classes,
+					defaultCollapsed: true
+				}
+			)
+			const arrayObjectSchema = {
+				title: "Milestones",
+				description: "Root array of objects.",
+				type: "array",
+				items: {
+					type: "object",
+					required: ["title"],
+					properties: {
+						title: { type: "string", title: "Title" },
+						due: { type: "string", format: "date", title: "Due" },
+						done: { type: "boolean", title: "Done" }
+					},
+					additionalProperties: false
+				}
+			}
+			const arrayObjectSaved = window.localStorage.getItem("json-editor-demo-array-objects")
+			const arrayObjectInitial = arrayObjectSaved ? JSON.parse(arrayObjectSaved) : []
+			const arrayObjectEditor = createDomEditor(
+				{
+					container: document.querySelector("#editor-array-objects"),
+					value: arrayObjectInitial,
+					schema: arrayObjectSchema,
+					lenient: false,
+					onChange(next) {
+						outputArrayObjects.textContent = JSON.stringify(next, null, 2)
+						window.localStorage.setItem("json-editor-demo-array-objects", JSON.stringify(next))
+					},
+					classes,
+					defaultCollapsed: true
+				}
+			)
+			output.textContent = JSON.stringify(editor.value, null, 2)
+			outputFreeform.textContent = JSON.stringify(freeformEditor.value, null, 2)
+			outputScalar.textContent = JSON.stringify(scalarEditor.value, null, 2)
+			outputArrayScalars.textContent = JSON.stringify(arrayScalarEditor.value, null, 2)
+			outputArrayObjects.textContent = JSON.stringify(arrayObjectEditor.value, null, 2)
+		</script>
+	</body>
+</html>

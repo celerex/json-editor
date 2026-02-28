@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1"/>
+		<title>JSON Editor Vue Demo</title>
+		<link rel="stylesheet" href="./src/editor.css"/>
+	</head>
+	<body>
+		<h1>Visual JSON Editor (Vue Adapter)</h1>
+		<section class="panel" id="app"></section>
+		<section class="panel">
+			<h2>Current JSON</h2>
+			<pre id="output"></pre>
+		</section>
+		<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+		<script type="module">
+			import { createEditorCore } from "./src/editor.js";
+			const { createApp, h, reactive } = Vue
+			const schema = {
+				title: "Profile",
+				description: "Structured profile data with nested settings.",
+				type: "object",
+				required: ["name", "status"],
+				properties: {
+					name: { type: "string", title: "Name", description: "Display name shown in the product UI." },
+					status: {
+						enum: ["active", "paused", "archived"],
+						title: "Status",
+						description: "Controls availability and visibility."
+					},
+					age: {
+						type: "number",
+						minimum: 0,
+						title: "Age",
+						description: "Minimum 0, used for eligibility."
+					},
+					newsletter: { type: "boolean", title: "Newsletter", description: "Receive product updates by email." },
+					contact: {
+						title: "Contact",
+						description: "Primary contact details.",
+						type: "object",
+						required: ["email"],
+						properties: {
+							email: { type: "string", title: "Email", description: "Main inbox for notifications." },
+							phone: { type: "string", title: "Phone", description: "Optional support number." }
+						},
+						additionalProperties: false
+					},
+					tags: {
+						title: "Tags",
+						description: "Free-form labels for search and grouping.",
+						type: "array",
+						items: { type: "string" }
+					}
+				},
+				additionalProperties: false
+			}
+			const output = document.querySelector("#output")
+			const state = reactive({ tree: null, selections: {} })
+			const editor = createEditorCore(
+				{
+					value: {},
+					schema,
+					defaultCollapsed: true,
+					onChange(next) {
+						output.textContent = JSON.stringify(next, null, 2)
+					},
+					onRender(tree) {
+						state.tree = tree
+					}
+				}
+			)
+			output.textContent = JSON.stringify(editor.value, null, 2)
+			function pathKey(path) {
+				if (!path || !path.length) return "root"
+				return path.map(String).join(".")
+			}
+			function renderDoc(description) {
+				if (!description) return null
+				return h("span", { class: "je-doc", "data-tooltip": description }, "?")
+			}
+			function renderField(node) {
+				const children = []
+				if (node.showLabel && node.title) {
+					children.push(h("label", { class: "je-label" }, [node.title, renderDoc(node.description)]))
+				}
+				else if (node.showDoc && node.description) {
+					children.push(renderDoc(node.description))
+				}
+				if (node.schema && Array.isArray(node.schema.enum)) {
+					children.push(
+						h(
+							"select",
+							{
+								class: "je-input",
+								onChange: (e) => {
+									const index = Number(e.target.value)
+									node.update(node.schema.enum[index])
+								}
+							},
+							node
+									.schema
+									.enum
+									.map((value, index) => h("option", { value: String(index), selected: value === node.value }, String(value)))
+						)
+					)
+				}
+				else if (node.fieldType === "boolean") {
+					children.push(
+						h(
+							"input",
+							{
+								class: "je-input",
+								type: "checkbox",
+								checked: Boolean(node.value),
+								onChange: (e) => node.update(e.target.checked)
+							}
+						)
+					)
+				}
+				else if (node.fieldType === "number") {
+					children.push(
+						h(
+							"input",
+							{
+								class: "je-input",
+								type: "number",
+								value: node.value === undefined ? "" : String(node.value),
+								onInput: (e) => {
+									const val = e.target.value === "" ? null : Number(e.target.value)
+									node.update(Number.isNaN(val) ? null : val)
+								}
+							}
+						)
+					)
+				}
+				else {
+					children.push(
+						h(
+							"input",
+							{
+								class: "je-input",
+								type: "text",
+								value: node.value === undefined ? "" : String(node.value),
+								onInput: (e) => node.update(e.target.value)
+							}
+						)
+					)
+				}
+				if (node.errors && node.errors.length) {
+					children.push(h("div", { class: "je-error" }, node.errors.join(", ")))
+				}
+				return h("div", { class: "je-field" }, children)
+			}
+			function renderObject(node) {
+				const headerChildren = [h("button", { class: "je-toggle", type: "button", onClick: () => node.toggle() }, node.collapsed
+					? "+"
+					: "–"), h("div", { class: "je-title" }, node.title)]
+				if (node.path.length === 0 && node.description) {
+					headerChildren.push(renderDoc(node.description))
+				}
+				const bodyChildren = node.properties
+					.map(
+						(prop) => {
+							const labelChildren = [prop.key]
+							if (prop.node && prop.node.description) labelChildren.push(renderDoc(prop.node.description))
+							return h(
+								"div",
+								{ class: "je-row", key: prop.key },
+								[h("button", { class: "je-remove je-icon-btn", type: "button", onClick: () => prop.remove() }, "×"), h("div", { class: "je-key" }, labelChildren), h("div", { class: "je-value" }, [renderNode(prop.node)])]
+							)
+						}
+					)
+				const addKey = pathKey(node.path)
+				const addOptions = node.addOptions || []
+				const addSelectValue = state.selections[addKey] || "0"
+				const addRowChildren = []
+				if (addOptions.length > 1) {
+					addRowChildren.push(
+						h(
+							"select",
+							{
+								class: "je-input",
+								value: addSelectValue,
+								onChange: (e) => {
+									state.selections[addKey] = e.target.value
+								}
+							},
+							addOptions
+									.map((option, index) => h("option", { value: String(index) }, option.label))
+						)
+					)
+				}
+				addRowChildren.push(
+					h(
+						"button",
+						{
+							class: "je-add-btn",
+							type: "button",
+							disabled: addOptions.length === 0,
+							onClick: () => {
+								const option = addOptions.length > 1 ? addOptions[Number(state.selections[addKey] || 0)] : addOptions[0]
+								if (!option) return
+								if (option.kind === "other") {
+									const name = window.prompt("Field name")
+									if (!name) return
+									node.addField(option, name)
+								}
+								else {
+									node.addField(option)
+								}
+							}
+						},
+						"Add field"
+					)
+				)
+				if (node.missingRequired && node.missingRequired.length) {
+					bodyChildren.push(h("div", { class: "je-warn" }, `Missing required: ${node.missingRequired.join(", ")}`))
+				}
+				return h(
+					"div",
+					{ class: "je-object" },
+					[h("div", { class: "je-header" }, headerChildren), node.collapsed ? null : h("div", { class: "je-body" }, [...bodyChildren, h("div", { class: "je-add" }, addRowChildren)])]
+				)
+			}
+			function renderArray(node) {
+				const header = h(
+					"div",
+					{ class: "je-header" },
+					[h("button", { class: "je-toggle", type: "button", onClick: () => node.toggle() }, node.collapsed
+						? "+"
+						: "–"), h("div", { class: "je-title" }, node.title), h("span", { class: "je-badge" }, String(node.count))]
+				)
+				const bodyChildren = node.items
+					.map(
+						(item) => h(
+							"div",
+							{ class: "je-row je-array-row", key: item.index },
+							[h("button", { class: "je-remove je-icon-btn", type: "button", onClick: () => item.remove() }, "×"), h("button", { class: "je-move je-icon-btn", type: "button", onClick: () => item.moveUp() }, "▲"), h("button", { class: "je-move je-icon-btn", type: "button", onClick: () => item.moveDown() }, "▼"), h("div", { class: "je-value" }, [renderNode(item.node)])]
+						)
+					)
+				const addKey = pathKey(node.path)
+				const addOptions = node.addOptions || []
+				const addSelectValue = state.selections[addKey] || "0"
+				const addRowChildren = []
+				if (addOptions.length > 1) {
+					addRowChildren.push(
+						h(
+							"select",
+							{
+								class: "je-input",
+								value: addSelectValue,
+								onChange: (e) => {
+									state.selections[addKey] = e.target.value
+								}
+							},
+							addOptions
+									.map((option, index) => h("option", { value: String(index) }, option.label))
+						)
+					)
+				}
+				addRowChildren.push(
+					h(
+						"button",
+						{
+							class: "je-add-btn",
+							type: "button",
+							disabled: addOptions.length === 0,
+							onClick: () => {
+								const option = addOptions.length > 1 ? addOptions[Number(state.selections[addKey] || 0)] : addOptions[0]
+								if (option) node.addItem(option)
+							}
+						},
+						"Add item"
+					)
+				)
+				return h(
+					"div",
+					{ class: "je-array" },
+					[header, node.collapsed ? null : h("div", { class: "je-body" }, [...bodyChildren, h("div", { class: "je-add" }, addRowChildren)])]
+				)
+			}
+			function renderNode(node) {
+				if (!node) return h("div", "Empty")
+				if (node.kind === "object") return renderObject(node)
+				if (node.kind === "array") return renderArray(node)
+				return renderField(node)
+			}
+			createApp(
+				{ render() {
+					return state.tree ? renderNode(state.tree) : h("div", "Loading…")
+				} }
+			).mount("#app")
+		</script>
+	</body>
+</html>

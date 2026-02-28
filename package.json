@@ -1,0 +1,13 @@
+{
+	"name": "json-editor",
+	"version": "0.1.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"build": "rollup -c && node scripts/copy-css.mjs"
+	},
+	"devDependencies": {
+		"@rollup/plugin-terser": "^0.4.4",
+		"rollup": "^4.14.2"
+	}
+}
