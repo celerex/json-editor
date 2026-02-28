@@ -151,7 +151,9 @@
 					lineNumbers: true,
 					lineWrapping: true,
 					indentUnit: 2,
-					tabSize: 2
+					tabSize: 2,
+					indentWithTabs: true,
+					extraKeys: { Tab: "indentMore", "Shift-Tab": "indentLess" }
 				}
 			)
 			const schemaEditor = window.CodeMirror(
@@ -163,7 +165,9 @@
 					lineNumbers: true,
 					lineWrapping: true,
 					indentUnit: 2,
-					tabSize: 2
+					tabSize: 2,
+					indentWithTabs: true,
+					extraKeys: { Tab: "indentMore", "Shift-Tab": "indentLess" }
 				}
 			)
 			const jsonError = document.querySelector("#playground-json-error")
