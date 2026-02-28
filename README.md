@@ -11,6 +11,8 @@ jsDelivr (latest):
 - UMD (min): https://cdn.jsdelivr.net/gh/celerex/json-editor@master/dist/editor.umd.min.js
 - CSS: https://cdn.jsdelivr.net/gh/celerex/json-editor@master/dist/editor.css
 
+An example from a tool where it is incorporated into the theme:
+
 ![Example configuration](example-configuration.png)
 
 ## Quick Start
