@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1"/>
+		<title>JSON Editor Playground</title>
+		<link
+			rel="stylesheet"
+			href="https://cdn.jsdelivr.net/gh/celerex/json-editor@master/dist/editor.css"/>
+		<link
+			rel="stylesheet"
+			href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.min.css"/>
+		<script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/javascript/javascript.min.js"></script>
+	</head>
+	<body>
+		<h1>JSON Editor Playground</h1>
+		<section class="panel" id="editor-playground"></section>
+		<section class="panel">
+			<h2>JSON</h2>
+			<div id="playground-json" class="code-editor"></div>
+			<div id="playground-json-error" class="je-error"></div>
+			<div class="code-actions">
+				<button id="apply-json" type="button">Apply JSON</button>
+			</div>
+		</section>
+		<section class="panel">
+			<h2>Schema</h2>
+			<div id="playground-schema" class="code-editor"></div>
+			<div id="playground-schema-error" class="je-error"></div>
+			<div class="code-actions">
+				<button id="apply-schema" type="button">Apply Schema</button>
+			</div>
+		</section>
+		<style>
+			.code-editor {
+				height: 280px;
+				border: 1px solid var(--je-panel-border);
+				border-radius: 8px;
+				overflow: hidden;
+				background: var(--je-panel-bg);
+			}
+
+			.code-editor .CodeMirror {
+				height: 100%;
+				font-family: "IBM Plex Mono", "SFMono-Regular", Menlo, monospace;
+				font-size: 12px;
+				line-height: 1.5;
+				background: var(--je-panel-bg);
+				color: var(--je-text-primary);
+			}
+
+			.code-editor .CodeMirror-gutters {
+				background: var(--je-panel-bg);
+				border-right: 0;
+				color: var(--je-text-muted);
+			}
+
+			.code-actions {
+				margin-top: 10px;
+				display: flex;
+				gap: 8px;
+			}
+		</style>
+		<script type="module">
+			import { createDomEditor } from "https://cdn.jsdelivr.net/gh/celerex/json-editor@master/dist/editor.esm.js";
+			const initialJson = { name: "json-editor", status: "active" }
+			const initialSchema = {
+				title: "Profile",
+				description: "Structured profile data with nested settings.",
+				type: "object",
+				required: ["name", "status"],
+				properties: {
+					name: { type: "string", title: "Name", description: "Display name shown in the product UI." },
+					status: {
+						enum: ["active", "paused", "archived"],
+						title: "Status",
+						description: "Controls availability and visibility."
+					},
+					age: {
+						type: "number",
+						minimum: 0,
+						title: "Age",
+						description: "Minimum 0, used for eligibility."
+					},
+					birthday: {
+						type: "string",
+						format: "date",
+						title: "Birthday",
+						description: "Use YYYY-MM-DD."
+					},
+					newsletter: { type: "boolean", title: "Newsletter", description: "Receive product updates by email." },
+					contact: {
+						title: "Contact",
+						description: "Primary contact details.",
+						type: "object",
+						required: ["email"],
+						properties: {
+							email: {
+								type: "string",
+								format: "email",
+								title: "Email",
+								description: "Main inbox for notifications."
+							},
+							phone: { type: "string", title: "Phone", description: "Optional support number." },
+							contactTime: {
+								type: "string",
+								format: "time",
+								title: "Best Time",
+								description: "Local time, HH:MM."
+							}
+						},
+						additionalProperties: false
+					},
+					tags: {
+						title: "Tags",
+						description: "Free-form labels for search and grouping.",
+						type: "array",
+						items: { type: "string" }
+					},
+					notes: {
+						title: "Notes",
+						description: "Either a short string or a structured note.",
+						oneOf: [{ type: "string", title: "Plain", description: "Single line note." }, {
+							type: "object",
+							title: "Structured",
+							description: "Expandable note object.",
+							properties: { summary: { type: "string", description: "Short summary." } }
+						}],
+						"ui:widget": "textarea"
+					},
+					preferences: {
+						title: "Preferences",
+						description: "Display and layout choices.",
+						type: "object",
+						properties: {
+							theme: { const: "light", title: "Theme", description: "Locked to light for now." },
+							layout: { enum: ["dense", "cozy", "spacious"], title: "Layout", description: "UI spacing preset." }
+						},
+						additionalProperties: { type: "string" }
+					}
+				},
+				additionalProperties: false
+			}
+			const jsonEditor = window.CodeMirror(
+				document
+						.querySelector("#playground-json"),
+				{
+					value: JSON.stringify(initialJson, null, 2),
+					mode: { name: "javascript", json: true },
+					lineNumbers: true,
+					lineWrapping: true,
+					indentUnit: 2,
+					tabSize: 2
+				}
+			)
+			const schemaEditor = window.CodeMirror(
+				document
+						.querySelector("#playground-schema"),
+				{
+					value: JSON.stringify(initialSchema, null, 2),
+					mode: { name: "javascript", json: true },
+					lineNumbers: true,
+					lineWrapping: true,
+					indentUnit: 2,
+					tabSize: 2
+				}
+			)
+			const jsonError = document.querySelector("#playground-json-error")
+			const schemaError = document.querySelector("#playground-schema-error")
+			const editor = createDomEditor(
+				{
+					container: document.querySelector("#editor-playground"),
+					value: initialJson,
+					schema: initialSchema,
+					lenient: false,
+					defaultCollapsed: true,
+					onChange(next) {
+						const nextText = JSON.stringify(next, null, 2)
+						const current = jsonEditor.getValue()
+						if (current !== nextText) jsonEditor.setValue(nextText)
+					}
+				}
+			)
+			document.querySelector("#apply-json")
+				.addEventListener(
+					"click",
+					() => {
+						try {
+							const raw = jsonEditor.getValue()
+							const parsed = raw.trim() === "" ? null : JSON.parse(raw)
+							jsonError.textContent = ""
+							editor.setValue(parsed)
+						}
+						catch (error) {
+							jsonError.textContent = error instanceof Error ? error.message : "Invalid JSON"
+						}
+					}
+				)
+			document.querySelector("#apply-schema")
+				.addEventListener(
+					"click",
+					() => {
+						try {
+							const raw = schemaEditor.getValue()
+							const parsed = raw.trim() === "" ? null : JSON.parse(raw)
+							schemaError.textContent = ""
+							editor.setSchema(parsed)
+						}
+						catch (error) {
+							schemaError.textContent = error instanceof Error ? error.message : "Invalid schema"
+						}
+					}
+				)
+		</script>
+	</body>
+</html>
