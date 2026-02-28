@@ -1,6 +1,8 @@
-# Visual JSON Editor (No Dependencies)
+# Visual JSON Editor
 
-A dependency-free, schema-guided JSON editor that renders a visual form. It supports nested objects/arrays, optional JSON Schema guidance, and a default DOM renderer with customizable styling.
+Check out the [demo](https://celerex.github.io/json-editor/demo.html) for the basic javascript version. There is also a demo of a [vue-based](https://celerex.github.io/json-editor/demo-vue.html) implementation.
+
+A dependency-free, optionally schema-guided JSON editor that renders a visual form. It supports nested objects/arrays, optional JSON Schema guidance, and a default DOM renderer with customizable styling.
 
 ## Quick Start
 

@@ -4,7 +4,7 @@
 		<meta charset="utf-8"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1"/>
 		<title>JSON Editor Vue Demo</title>
-		<link rel="stylesheet" href="./src/editor.css"/>
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/celerex/json-editor@master/dist/editor.css"/>
 	</head>
 	<body>
 		<h1>Visual JSON Editor (Vue Adapter)</h1>
@@ -15,7 +15,7 @@
 		</section>
 		<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 		<script type="module">
-			import { createEditorCore } from "./src/editor.js";
+			import { createEditorCore } from "https://cdn.jsdelivr.net/gh/celerex/json-editor@master/dist/editor.esm.js";
 			const { createApp, h, reactive } = Vue
 			const schema = {
 				title: "Profile",
