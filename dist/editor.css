@@ -1,11 +1,4 @@
 :root {
-	color-scheme: light;
-	font-family: var(--je-font-family, "IBM Plex Sans", "Segoe UI", sans-serif);
-	background: var(--je-page-bg, #f5f2ea);
-	--je-panel-bg: #fff9ef;
-	--je-panel-border: #d7c9b8;
-	--je-panel-shadow: rgba(30, 27, 22, 0.08);
-	--je-text-primary: #1e1b16;
 	--je-text-muted: #5d5347;
 	--je-text-dim: #7a6a5a;
 	--je-row-hover: rgba(74, 64, 55, 0.7);
@@ -23,42 +16,8 @@
 	--je-error: #a23a2a;
 	--je-warning: #8a5a1f;
 	--je-gap: 8px;
-	--je-panel-radius: 12px;
 	--je-input-radius: 6px;
 	--je-badge-radius: 10px;
-}
-
-body {
-	margin: 0;
-	padding: 24px;
-	display: grid;
-	gap: 20px;
-	grid-template-columns: minmax(320px, 1fr) minmax(280px, 1fr);
-}
-
-h1 {
-	grid-column: 1 / -1;
-	margin: 0;
-	font-weight: 600;
-	color: var(--je-text-primary);
-}
-
-.panel {
-	background: var(--je-panel-bg);
-	border: 1px solid var(--je-panel-border);
-	border-radius: var(--je-panel-radius);
-	padding: 16px;
-	box-shadow: 0 6px 20px var(--je-panel-shadow);
-}
-
-#editor {
-	min-height: 400px;
-}
-
-pre {
-	margin: 0;
-	white-space: pre-wrap;
-	font-size: 12px;
 }
 
 .je-header {
@@ -143,7 +102,7 @@ textarea.je-input {
 	align-items: center;
 }
 
-button {
+.je-button {
 	padding: 6px 10px;
 	border-radius: var(--je-input-radius);
 	border: 1px solid var(--je-button-border);
@@ -151,7 +110,7 @@ button {
 	cursor: pointer;
 }
 
-button:disabled {
+.je-button:disabled {
 	opacity: var(--je-disabled);
 	cursor: not-allowed;
 }
@@ -311,9 +270,6 @@ button:disabled {
 }
 
 @media (max-width: 900px) {
-	body {
-		grid-template-columns: 1fr;
-	}
 	.je-row, .je-array-row {
 		grid-template-columns: max-content 1fr;
 	}

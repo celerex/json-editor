@@ -7,6 +7,70 @@
 		<link
 			rel="stylesheet"
 			href="https://cdn.jsdelivr.net/gh/celerex/json-editor@master/dist/editor.css"/>
+		<style>
+			:root {
+				--je-panel-bg: #fff9ef;
+				--je-panel-border: #d7c9b8;
+				--je-panel-shadow: rgba(30, 27, 22, 0.08);
+				--je-panel-radius: 12px;
+				--je-text-primary: #1e1b16;
+			}
+
+			body {
+				margin: 0;
+				padding: 24px;
+				display: grid;
+				gap: 20px;
+				grid-template-columns: minmax(320px, 1fr) minmax(280px, 1fr);
+				color-scheme: light;
+				font-family: var(--je-font-family, "IBM Plex Sans", "Segoe UI", sans-serif);
+				background: var(--je-page-bg, #f5f2ea);
+			}
+
+			h1 {
+				grid-column: 1 / -1;
+				margin: 0;
+				font-weight: 600;
+				color: var(--je-text-primary);
+			}
+
+			.panel {
+				background: var(--je-panel-bg);
+				border: 1px solid var(--je-panel-border);
+				border-radius: var(--je-panel-radius);
+				padding: 16px;
+				box-shadow: 0 6px 20px var(--je-panel-shadow);
+			}
+
+			#app {
+				min-height: 400px;
+			}
+
+			pre {
+				margin: 0;
+				white-space: pre-wrap;
+				font-size: 12px;
+			}
+
+			button {
+				padding: 6px 10px;
+				border-radius: var(--je-input-radius);
+				border: 1px solid var(--je-button-border);
+				background: var(--je-button-bg);
+				cursor: pointer;
+			}
+
+			button:disabled {
+				opacity: var(--je-disabled);
+				cursor: not-allowed;
+			}
+
+			@media (max-width: 900px) {
+				body {
+					grid-template-columns: 1fr;
+				}
+			}
+		</style>
 	</head>
 	<body>
 		<h1>Visual JSON Editor (Vue Adapter)</h1>

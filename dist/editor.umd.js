@@ -1028,7 +1028,7 @@
 		}
 		const header = ensureChild(wrapper, ":scope > .je-header", () => el("div", "je-header"));
 		applyClasses(header, classes && classes.header);
-		const toggle = ensureChild(header, ":scope > .je-toggle", () => el("button", "je-toggle"));
+		const toggle = ensureChild(header, ":scope > .je-toggle", () => el("button", "je-toggle je-button"));
 		toggle.type = "button";
 		toggle.textContent = node.collapsed ? "+" : "–";
 		attachAction(
@@ -1185,7 +1185,7 @@
 							typeSelect.appendChild(opt);
 						}
 					);
-				const addBtn = ensureChild(addRow, ":scope > .je-add-btn", () => el("button", "je-add-btn", "Add"));
+				const addBtn = ensureChild(addRow, ":scope > .je-add-btn", () => el("button", "je-add-btn je-button", "Add"));
 				addBtn.type = "button";
 				addBtn.disabled = false;
 				attachAction(
@@ -1216,7 +1216,7 @@
 							select.appendChild(opt);
 						}
 					);
-				const addBtn = ensureChild(addRow, ":scope > .je-add-btn", () => el("button", "je-add-btn", "Add field"));
+				const addBtn = ensureChild(addRow, ":scope > .je-add-btn", () => el("button", "je-add-btn je-button", "Add field"));
 				addBtn.type = "button";
 				addBtn.disabled = false;
 				attachAction(
@@ -1270,7 +1270,7 @@
 		}
 		const header = ensureChild(wrapper, ":scope > .je-header", () => el("div", "je-header"));
 		applyClasses(header, classes && classes.header);
-		const toggle = ensureChild(header, ":scope > .je-toggle", () => el("button", "je-toggle"));
+		const toggle = ensureChild(header, ":scope > .je-toggle", () => el("button", "je-toggle je-button"));
 		toggle.type = "button";
 		toggle.textContent = node.collapsed ? "+" : "–";
 		attachAction(
@@ -1399,7 +1399,7 @@
 				addRow.removeChild(select);
 				select = null;
 			}
-			const addBtn = ensureChild(addRow, ":scope > .je-add-btn", () => el("button", "je-add-btn", "Add item"));
+			const addBtn = ensureChild(addRow, ":scope > .je-add-btn", () => el("button", "je-add-btn je-button", "Add item"));
 			addBtn.type = "button";
 			addBtn.disabled = node.addOptions.length === 0;
 			attachAction(
