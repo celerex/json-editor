@@ -64,8 +64,10 @@
 		</style>
 		<script type="module">
 			import { createDomEditor } from "https://cdn.jsdelivr.net/gh/celerex/json-editor@master/dist/editor.esm.js";
-			const initialJson = { name: "json-editor", status: "active" }
-			const initialSchema = {
+			const storedJson = window.localStorage.getItem("json-editor-playground-json")
+			const storedSchema = window.localStorage.getItem("json-editor-playground-schema")
+			const initialJson = storedJson ? JSON.parse(storedJson) : { name: "json-editor", status: "active" }
+			const defaultSchema = {
 				title: "Profile",
 				description: "Structured profile data with nested settings.",
 				type: "object",
@@ -142,6 +144,7 @@
 				},
 				additionalProperties: false
 			}
+			const initialSchema = storedSchema ? JSON.parse(storedSchema) : defaultSchema
 			const jsonEditor = window.CodeMirror(
 				document
 						.querySelector("#playground-json"),
@@ -183,6 +186,7 @@
 						const nextText = JSON.stringify(next, null, 2)
 						const current = jsonEditor.getValue()
 						if (current !== nextText) jsonEditor.setValue(nextText)
+						window.localStorage.setItem("json-editor-playground-json", JSON.stringify(next))
 					}
 				}
 			)
@@ -194,6 +198,7 @@
 							const raw = jsonEditor.getValue()
 							const parsed = raw.trim() === "" ? null : JSON.parse(raw)
 							jsonError.textContent = ""
+							window.localStorage.setItem("json-editor-playground-json", JSON.stringify(parsed))
 							editor.setValue(parsed)
 						}
 						catch (error) {
@@ -209,6 +214,7 @@
 							const raw = schemaEditor.getValue()
 							const parsed = raw.trim() === "" ? null : JSON.parse(raw)
 							schemaError.textContent = ""
+							window.localStorage.setItem("json-editor-playground-schema", JSON.stringify(parsed))
 							editor.setSchema(parsed)
 						}
 						catch (error) {
